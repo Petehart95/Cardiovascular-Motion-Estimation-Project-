@@ -1,6 +1,6 @@
 # Parallel Cardiac Image Processing Project
 
-Artefact - To Do:
+#Artefact - To Do:
 
 0. Experiment with OpenCL on MATLAB and C++
 
