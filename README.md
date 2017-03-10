@@ -1,5 +1,5 @@
 # Parallel Cardiac Image Processing Project
-## (Final Question Title Here) >.<
+## An Investigation into the Prominence of Parallelisation with a Block-Matching Motion Estimation Algorithm for Cardiac Image Processing
 
 ####Artefact - To Do:
 
