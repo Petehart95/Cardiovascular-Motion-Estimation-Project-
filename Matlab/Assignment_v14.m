@@ -11,7 +11,7 @@ disp('------------------------');
 %Receive a DICOM image as input, store it in a 4D matrix.
 %Im(Col,Row,R/G/B,Frame)
 disp('Loading the DICOM Image...');
-Im = dicomread('E:\Year 3\Project\Artefact\data\IM_0025-Bmode');
+Im = dicomread('E:\Year 3\Project\Artefact\patient_data\IM_0025-Bmode');
 disp('DICOM Image Loaded!');
 disp('------------------------');
 disp('Initialising Variables...');
@@ -70,13 +70,13 @@ for fr=1:size(Im(:,:,:,end-2))
    
     %Copy matrices over to the GPU device
     %Get the first frame as a reference point
-     gpFr1 = gpuArray(Im(:,:,1,fr));
+     Fr1 = Im(:,:,1,fr);
     %Get the subsequent frame for motion estimation
-     gpFr2 = gpuArray(Im(:,:,1,fr+1));
+     Fr2 = Im(:,:,1,fr+1);
     
     %Empty matrices from the previous frame iteration
-    gpov = gpuArray(zeros(blockCount,2));
-    gpmv = gpuArray(zeros(blockCount,2));
+    ov = zeros(blockCount,2);
+    mv = zeros(blockCount,2);
 
     %Reset the displacement value stored from the previous frame iteration
     totalDisplacement = 0;
@@ -85,8 +85,10 @@ for fr=1:size(Im(:,:,:,end-2))
     %Three-step search procedure(TSS)
     %Iterate through all of the block of pixels in the image
     parfor y1=110:sizeY
+        n = zeros(
        for x1=110:sizeX
-            kOrg = gpFr1(y1:y1+S,x1:x1+S);
+            
+            kOrg = Fr1(y1:y1+S,x1:x1+S);
 
             %Reset variables from the previous iteration
             y2 = y1;
@@ -103,48 +105,48 @@ for fr=1:size(Im(:,:,:,end-2))
                 %Obtain the next 9 blocks from Frame n + 1
                 %Centre block does not need to be checked, as it should
                 %already be within the index range of the reference image
-                k0 = gpFr2(y2:y2+S,x2:x2+S);
+                k0 = Fr2(y2:y2+S,x2:x2+S);
                 
                 
                 %If a block exceeds the image size, initialise it as an
                 %empty block
                 if(y2 - S > 0 && x2 - S > 0)
-                    k1 = gpFr2(y2-S:y2,x2-S:x2);
+                    k1 = Fr2(y2-S:y2,x2-S:x2);
                 else
                     k1 = zeros(size(k0),'uint8');
                 end
-                if (y2 + S < size(gpFr2,1) && x2 - S > 0)
-                    k2 = gpFr2(y2:y2+S,x2-S:x2);
+                if (y2 + S < size(Fr2,1) && x2 - S > 0)
+                    k2 = Fr2(y2:y2+S,x2-S:x2);
                 else
                     k2 = zeros(size(k0),'uint8');
                 end
-                if (y2 + S + S < size(gpFr2,1) && x2 - S > 0)
-                    k3 = gpFr2(y2+S:y2+S+S,x2-S:x2);
+                if (y2 + S + S < size(Fr2,1) && x2 - S > 0)
+                    k3 = Fr2(y2+S:y2+S+S,x2-S:x2);
                 else
                     k3 = zeros(size(k0),'uint8');
                 end
-                if (y2 - S > 0 && x2 + S < size(gpFr2,2))
-                    k4 = gpFr2(y2-S:y2,x2:x2+S);
+                if (y2 - S > 0 && x2 + S < size(Fr2,2))
+                    k4 = Fr2(y2-S:y2,x2:x2+S);
                 else
                     k4 = zeros(size(k0),'uint8');
                 end
-                if (y2 + S + S < size(gpFr2,1) && x2 + S < size(gpFr2,2))
-                    k5 = gpFr2(y2+S:y2+S+S,x2:x2+S);
+                if (y2 + S + S < size(Fr2,1) && x2 + S < size(Fr2,2))
+                    k5 = Fr2(y2+S:y2+S+S,x2:x2+S);
                 else
                     k5 = zeros(size(k0),'uint8');
                 end
-                if (y2 - S > 0 && x2 + S + S < size(gpFr2,2))
-                    k6 = gpFr2(y2-S:y2,x2+S:x2+S+S);
+                if (y2 - S > 0 && x2 + S + S < size(Fr2,2))
+                    k6 = Fr2(y2-S:y2,x2+S:x2+S+S);
                 else
                     k6 = zeros(size(k0),'uint8');
                 end
-                if (y2 + S < size(gpFr2,1) && x2 + S + S < size(gpFr2,2))
-                    k7 = gpFr2(y2:y2+S,x2+S:x2+S+S);
+                if (y2 + S < size(Fr2,1) && x2 + S + S < size(Fr2,2))
+                    k7 = Fr2(y2:y2+S,x2+S:x2+S+S);
                 else
                     k7 = zeros(size(k0),'uint8');
                 end
-                if (y2 + S + S < size(gpFr2,1) && x2 + S + S < size(gpFr2,2))
-                    k8 = gpFr2(y2+S:y2+S+S,x2+S:x2+S+S);
+                if (y2 + S + S < size(Fr2,1) && x2 + S + S < size(Fr2,2))
+                    k8 = Fr2(y2+S:y2+S+S,x2+S:x2+S+S);
                 else
                     k8 = zeros(size(k0),'uint8');
                 end
@@ -250,8 +252,8 @@ for fr=1:size(Im(:,:,:,end-2))
         end
     end
     
-    pov = gather(gpov);
-    pmv = gather(gpmv);
+    pov = gather(ov);
+    pmv = gather(mv);
     
     
     totalDisplacement = sqrt(totalDisplacement);
@@ -260,7 +262,7 @@ for fr=1:size(Im(:,:,:,end-2))
     imshow(Im(:,:,:,fr));
     title(num2str(fr));
     hold on;
-    q = quiver(gpov(:,2),gpov(:,1),gpmv(:,2),gpmv(:,1),'color',[1,0,0]);
+    q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
     %q.Color = 'r';
     hold off;
     pause(0.01);

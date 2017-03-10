@@ -11,7 +11,7 @@ disp('------------------------');
 %Receive a DICOM image as input, store it in a 4D matrix.
 %Im(Col,Row,R/G/B,Frame)
 disp('Loading the DICOM Image...');
-Im = dicomread('E:\Year 3\Project\Artefact\data\IM_0001-Bmode');
+Im = dicomread('E:\Year 3\Project\Artefact\patient_data\IM_0025-Bmode');
 disp('DICOM Image Loaded!');
 disp('------------------------');
 disp('Initialising Variables...');
@@ -277,7 +277,6 @@ for fr=1:size(Im(:,:,:,end-2))
     title(num2str(fr));
     hold on;
     q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
-    %q.Color = 'r';
     hold off;
     pause(0.01);
 end
