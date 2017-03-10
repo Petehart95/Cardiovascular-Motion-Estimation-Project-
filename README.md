@@ -1,1 +1,1 @@
-# Parallel-Cardiac-Image-Processing-Project
+# Parallel Cardiac Image Processing Project
