@@ -11,7 +11,7 @@ disp('------------------------');
 %Receive a DICOM image as input, store it in a 4D matrix.
 %Im(Col,Row,R/G/B,Frame)
 disp('Loading the DICOM Image...');
-Im = dicomread('E:\Year 3\Project\Artefact\patient_data\IM_0025-Bmode');
+Im = dicomread('E:\Year 3\Project\patient_data\IM_0025-Bmode');
 disp('DICOM Image Loaded!');
 disp('------------------------');
 disp('Initialising Variables...');
