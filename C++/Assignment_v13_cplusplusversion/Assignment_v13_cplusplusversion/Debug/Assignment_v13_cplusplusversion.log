@@ -1,0 +1,7 @@
+﻿  ThreeStepSearch.cpp
+e:\year 3\project\parallelcardiacimageprocessingproject\c++\assignment_v13_cplusplusversion\assignment_v13_cplusplusversion\threestepsearch.cpp(141): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+e:\year 3\project\parallelcardiacimageprocessingproject\c++\assignment_v13_cplusplusversion\assignment_v13_cplusplusversion\threestepsearch.cpp(142): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+  Main.cpp
+e:\year 3\project\parallelcardiacimageprocessingproject\c++\assignment_v13_cplusplusversion\assignment_v13_cplusplusversion\main.cpp(6): fatal error C1083: Cannot open include file: 'cv.h': No such file or directory
+  Matrix.cpp
+  Generating Code...
