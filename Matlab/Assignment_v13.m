@@ -19,6 +19,15 @@ disp('Initialising Variables...');
 Fr1 = Im(:,:,1,2);
 Fr2 = Im(:,:,1,3);
 
+fid1 = fopen('Frame 1.txt','wt');
+fid2 = fopen('Frame 2.txt','wt');
+
+fprintf(fid1,'%d ', Fr1);
+fprintf(fid2,'%d ', Fr2);
+
+
+
+
 centreKernel = 1; %Flag for verifying if optimal estimate has been found
 totalDisplacement = 1; %distanceTravelled = sqrt(x1 - x2).^2 + (y1 - y2).^2 + ...)
 velocity = 1; %Velocity value for estimating the muscle movement per frame
@@ -63,10 +72,9 @@ disp('------------------------');
 disp('Beginning DICOM Image Analysis...');
 pause(1);
 
-
 %Iterate through all frames of the DICOM image
 for fr=1:size(Im(:,:,:,end-2))
-   tic
+   
     %Get the first frame as a reference point
     Fr1 = Im(:,:,1,fr);
     %Get the subsequent frame for motion estimation
@@ -271,7 +279,6 @@ for fr=1:size(Im(:,:,:,end-2))
     q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
     hold off;
     pause(0.01);
-    toc
 end
 
 

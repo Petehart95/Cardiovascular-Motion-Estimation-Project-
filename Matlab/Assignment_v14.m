@@ -11,7 +11,7 @@ disp('------------------------');
 %Receive a DICOM image as input, store it in a 4D matrix.
 %Im(Col,Row,R/G/B,Frame)
 disp('Loading the DICOM Image...');
-Im = dicomread('E:\Year 3\Project\patient_data\IM_0025-Bmode');
+Im = dicomread('E:\Year 3\Project\Artefact\patient_data\IM_0025-Bmode');
 disp('DICOM Image Loaded!');
 disp('------------------------');
 disp('Initialising Variables...');
@@ -61,14 +61,9 @@ disp('------------------------');
 disp('Beginning DICOM Image Analysis...');
 pause(1);
 
-Im_struct = size(Im(:,:,:,:));
-totalRows = Im_struct(1);
-totalColumns = Im_struct(2);
-totalChannels = Im_struct(3);
-totalFrames = Im_struct(4);
 
-sizeY = totalRows / blockSize;
-sizeX = totalColumns / blockSize;
+sizeY = 800;
+sizeX = 600;
 
 %Iterate through all frames of the DICOM image
 for fr=1:size(Im(:,:,:,end-2))
@@ -90,6 +85,7 @@ for fr=1:size(Im(:,:,:,end-2))
     %Three-step search procedure(TSS)
     %Iterate through all of the block of pixels in the image
     parfor y1=110:sizeY
+        n = zeros(
        for x1=110:sizeX
             
             kOrg = Fr1(y1:y1+S,x1:x1+S);
