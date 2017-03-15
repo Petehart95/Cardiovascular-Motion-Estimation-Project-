@@ -65,7 +65,7 @@ pause(1);
 
 
 %Iterate through all frames of the DICOM image
-for fr=1:size(Im(:,:,:,end-2))
+for fr=1:1%size(Im(:,:,:,end-2))
     tic
     %Get the first frame as a reference point
     Fr1 = Im(:,:,1,fr);

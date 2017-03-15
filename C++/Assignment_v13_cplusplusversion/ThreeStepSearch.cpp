@@ -27,102 +27,106 @@ void TSS::Search(Matrix& Fr1, Matrix& Fr2, int M, int N)
 	{
 		for (int y1 = 110; y1 < N; y1 += B)
 		{
+			S = 4;
 			x2 = x1;
 			y2 = y1;
-
-			blockM = S + 1;
-			blockN = S + 1;
-
-			kOrg = Fr1.getBlock(x1, x1 + S, y1, y1 + S);
-			k0 = Fr2.getBlock(x2, x2 + S, y2, y2 + S);
-
-			k1 = Fr2.getBlock(x2 - S, x2, y2 - S, y2);
-			k2 = Fr2.getBlock(x2, x2 + S, y2 - S, y2);
-			k3 = Fr2.getBlock(x2 + S, x2 + (S * 2), y2 - S, y2);
-			k4 = Fr2.getBlock(x2 - S, x2, y2, y2 + S);
-			k5 = Fr2.getBlock(x2 + S, x2 + (S * 2), y2, y2 + S);
-			k6 = Fr2.getBlock(x2 - S, x2, y2 + S, y2 + (S * 2));
-			k7 = Fr2.getBlock(x2, x2 + S, y2 + S, y2 + (S * 2));
-			k8 = Fr2.getBlock(x2 + S, x2 + (S * 2), y2 + S, y2 + (S * 2));
-
-			bestSAD = TSS::SAD(kOrg, k0, blockM, blockN);
-			xtemp = x2;
-			ytemp = y2;
-
-			//K1 Check
-			SAD = TSS::SAD(kOrg, k1, blockM, blockN);
-			if (SAD < bestSAD)
+			do
 			{
-				bestSAD = SAD;
-				xtemp = x2 - S;
-				ytemp = y2 - S;
-			}
+				blockM = S + 1;
+				blockN = S + 1;
 
-			//K2 Check
-			SAD = TSS::SAD(kOrg,k2,blockM,blockN);
-			if (SAD < bestSAD)
-			{
-				bestSAD = SAD;
-				ytemp = y2;
-				xtemp = x2 - S;
-			}
-			
-			//K3 Check
-			SAD = TSS::SAD(kOrg, k3, blockM, blockN);
-			if (SAD < bestSAD)
-			{
-				bestSAD = SAD;
-				ytemp = y2 + S;
-				xtemp = x2 - S;
-			}
+				kOrg = Fr1.getBlock(x1, x1 + S, y1, y1 + S);
+				k0 = Fr2.getBlock(x2, x2 + S, y2, y2 + S);
 
-			//K4 Check
-			SAD = TSS::SAD(kOrg, k4, blockM, blockN);
-			if (SAD < bestSAD)
-			{
-				bestSAD = SAD;
-				ytemp = y2 - S;
+				k1 = Fr2.getBlock(x2 - S, x2, y2 - S, y2);
+				k2 = Fr2.getBlock(x2, x2 + S, y2 - S, y2);
+				k3 = Fr2.getBlock(x2 + S, x2 + (S * 2), y2 - S, y2);
+				k4 = Fr2.getBlock(x2 - S, x2, y2, y2 + S);
+				k5 = Fr2.getBlock(x2 + S, x2 + (S * 2), y2, y2 + S);
+				k6 = Fr2.getBlock(x2 - S, x2, y2 + S, y2 + (S * 2));
+				k7 = Fr2.getBlock(x2, x2 + S, y2 + S, y2 + (S * 2));
+				k8 = Fr2.getBlock(x2 + S, x2 + (S * 2), y2 + S, y2 + (S * 2));
+
+				bestSAD = TSS::SAD(kOrg, k0, blockM, blockN);
 				xtemp = x2;
-			}
-
-			//K5 Check
-			SAD = TSS::SAD(kOrg, k5, blockM, blockN);
-			if (SAD < bestSAD)
-			{
-				bestSAD = SAD;
-				ytemp = y2 + S;
-				xtemp = x2;
-			}
-
-			//K6 Check
-			SAD = TSS::SAD(kOrg, k6, blockM, blockN);
-			if (SAD < bestSAD)
-			{
-				bestSAD = SAD;
-				ytemp = y2 - S;
-				xtemp = x2 + S;
-			}
-
-			//K7 Check
-			SAD = TSS::SAD(kOrg, k7, blockM, blockN);
-			if (SAD < bestSAD)
-			{
-				bestSAD = SAD;
 				ytemp = y2;
-				xtemp = x2 + S;
-			}
 
-			//K8 Check
-			SAD = TSS::SAD(kOrg, k8, blockM, blockN);
-			if (SAD < bestSAD)
-			{
-				bestSAD = SAD;
-				ytemp = y2 + S;
-				xtemp = x2 + S;
-			}
+				//K1 Check
+				SAD = TSS::SAD(kOrg, k1, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					xtemp = x2 - S;
+					ytemp = y2 - S;
+				}
 
-			y2 = ytemp;
-			x2 = xtemp;
+				//K2 Check
+				SAD = TSS::SAD(kOrg, k2, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					ytemp = y2;
+					xtemp = x2 - S;
+				}
+
+				//K3 Check
+				SAD = TSS::SAD(kOrg, k3, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					ytemp = y2 + S;
+					xtemp = x2 - S;
+				}
+
+				//K4 Check
+				SAD = TSS::SAD(kOrg, k4, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					ytemp = y2 - S;
+					xtemp = x2;
+				}
+
+				//K5 Check
+				SAD = TSS::SAD(kOrg, k5, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					ytemp = y2 + S;
+					xtemp = x2;
+				}
+
+				//K6 Check
+				SAD = TSS::SAD(kOrg, k6, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					ytemp = y2 - S;
+					xtemp = x2 + S;
+				}
+
+				//K7 Check
+				SAD = TSS::SAD(kOrg, k7, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					ytemp = y2;
+					xtemp = x2 + S;
+				}
+
+				//K8 Check
+				SAD = TSS::SAD(kOrg, k8, blockM, blockN);
+				if (SAD < bestSAD)
+				{
+					bestSAD = SAD;
+					ytemp = y2 + S;
+					xtemp = x2 + S;
+				}
+
+				y2 = ytemp;
+				x2 = xtemp;
+				S = S / 2;
+			} while (S > 1);
 		}
 	} //for loop ends here
 
