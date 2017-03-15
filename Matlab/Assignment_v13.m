@@ -85,7 +85,6 @@ for fr=1:size(Im(:,:,:,end-2))
     %Reset the displacement value stored from the previous frame iteration
     pxDistance = 0;
     blockNo = 1;
-    kern = parallel.gpu.CUDAKernel('test.cu');
     %Three-step search procedure(TSS)
     %Iterate through all of the block of pixels in the image
     for y1=110:P:size(Fr1,1)-20
