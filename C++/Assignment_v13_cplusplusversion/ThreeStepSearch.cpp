@@ -30,8 +30,8 @@ void TSS::Search(Matrix& Fr1, Matrix& Fr2, int M, int N)
 			x2 = x1;
 			y2 = y1;
 
-			blockM = S - 1;
-			blockN = S - 1;
+			blockM = S + 1;
+			blockN = S + 1;
 
 			kOrg = Fr1.getBlock(x1, x1 + S, y1, y1 + S);
 			k0 = Fr2.getBlock(x2, x2 + S, y2, y2 + S);
