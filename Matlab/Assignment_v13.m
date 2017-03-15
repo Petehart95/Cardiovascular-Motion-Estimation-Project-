@@ -20,7 +20,7 @@ Fr1 = Im(:,:,1,2);
 Fr2 = Im(:,:,1,3);
 
 centreKernel = 1; %Flag for verifying if optimal estimate has been found
-totalDisplacement = 1; %distanceTravelled = sqrt(x1 - x2).^2 + (y1 - y2).^2 + ...)
+pxDistance = 1; %distanceTravelled = sqrt(x1 - x2).^2 + (y1 - y2).^2 + ...)
 velocity = 1; %Velocity value for estimating the muscle movement per frame
 Frame_Rate = 50; %Extracted from the DICOM file info
 
@@ -83,7 +83,7 @@ for fr=1:size(Im(:,:,:,end-2))
     %ov_y = zeros(size(Im(:,:,1,1)));
     
     %Reset the displacement value stored from the previous frame iteration
-    totalDisplacement = 0;
+    pxDistance = 0;
     blockNo = 1;
     
     
@@ -118,11 +118,13 @@ for fr=1:size(Im(:,:,:,end-2))
                 else
                     k1 = zeros(size(k0),'uint8');
                 end
+                
                 if (y2 + S < size(Fr2,1) && x2 - S > 0)
                     k2 = Fr2(y2:y2+S,x2-S:x2);
                 else
                     k2 = zeros(size(k0),'uint8');
                 end
+                
                 if (y2 + S + S < size(Fr2,1) && x2 - S > 0)
                     k3 = Fr2(y2+S:y2+S+S,x2-S:x2);
                 else
@@ -134,21 +136,25 @@ for fr=1:size(Im(:,:,:,end-2))
                 else
                     k4 = zeros(size(k0),'uint8');
                 end
+                
                 if (y2 + S + S < size(Fr2,1) && x2 + S < size(Fr2,2))
                     k5 = Fr2(y2+S:y2+S+S,x2:x2+S);
                 else
                     k5 = zeros(size(k0),'uint8');
                 end
+                
                 if (y2 - S > 0 && x2 + S + S < size(Fr2,2))
                     k6 = Fr2(y2-S:y2,x2+S:x2+S+S);
                 else
                     k6 = zeros(size(k0),'uint8');
                 end
+                
                 if (y2 + S < size(Fr2,1) && x2 + S + S < size(Fr2,2))
                     k7 = Fr2(y2:y2+S,x2+S:x2+S+S);
                 else
                     k7 = zeros(size(k0),'uint8');
                 end
+                
                 if (y2 + S + S < size(Fr2,1) && x2 + S + S < size(Fr2,2))
                     k8 = Fr2(y2+S:y2+S+S,x2+S:x2+S+S);
                 else
@@ -247,7 +253,7 @@ for fr=1:size(Im(:,:,:,end-2))
             
             blockNo = blockNo + 1;
             
-            totalDisplacement = totalDisplacement + ((y2 - y1).^2 + (x2 - x1).^2);
+            pxDistance = pxDistance + ((y2 - y1).^2 + (x2 - x1).^2);
                         
             %progress = blockNo / 3129 * 100;
             
@@ -262,16 +268,22 @@ for fr=1:size(Im(:,:,:,end-2))
             %disp(str);
         end
     end
-    totalDisplacement = sqrt(totalDisplacement);
-    velocity = totalDisplacement / Frame_Rate;
     
-    imshow(Im(:,:,:,fr));
-    title(num2str(fr));
-    hold on;
-    q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
-    hold off;
-    pause(0.01);
-    toc
+    pxDistance = sqrt(pxDistance);
+    cmDistance = pxDistance / 30;
+    velocity = cmDistance / Frame_Rate;
+    velocityArr(fr) = velocity;
+    stem(velocityArr);
+    
+    
+%     imshow(Im(:,:,:,fr));
+%     title(num2str(fr));
+%     hold on;
+%     q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
+%     hold off;
+%     pause(0.01);
+%     toc
+    disp(velocity);
 end
 
 
