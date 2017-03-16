@@ -16,11 +16,18 @@ disp('DICOM Image Loaded!');
 disp('------------------------');
 disp('Initialising Variables...');
 %Obtain base frame and future frame for comparison
+Fr1 = Im(:,:,1,2);
+Fr2 = Im(:,:,1,3);
 
-centreKernel = 1; %Flag for verifying if optimal estimate has been found
-totalDisplacement = 1; %distanceTravelled = sqrt(x1 - x2).^2 + (y1 - y2).^2 + ...)
-velocity = 1; %Velocity value for estimating the muscle movement per frame
+centreKernel = 0; %Flag for verifying if optimal estimate has been found
+pxDistance = 0; %distanceTravelled = sqrt(x1 - x2).^2 + (y1 - y2).^2 + ...)
+velocity = 0; %Velocity value for estimating the muscle movement per frame
 Frame_Rate = 50; %Extracted from the DICOM file info
+Im_struct = size(Im(:,:,:,:));
+totalRows = (Im_struct(1));
+totalColumns = (Im_struct(2));
+totalChannels = (Im_struct(3));
+totalFrames = (Im_struct(4));
 
 P = 4;
 
@@ -61,39 +68,27 @@ disp('------------------------');
 disp('Beginning DICOM Image Analysis...');
 pause(1);
 
-Im_struct = size(Im(:,:,:,:));
-totalRows = Im_struct(1);
-totalColumns = Im_struct(2);
-totalChannels = Im_struct(3);
-totalFrames = Im_struct(4);
-
-sizeY = totalRows / blockSize;
-sizeX = totalColumns / blockSize;
 
 %Iterate through all frames of the DICOM image
-for fr=1:size(Im(:,:,:,end-2))
-   
-    %Copy matrices over to the GPU device
+for fr=1:totalFrames-1
+    tic
     %Get the first frame as a reference point
-     Fr1 = Im(:,:,1,fr);
+    Fr1 = Im(:,:,1,fr);
     %Get the subsequent frame for motion estimation
-     Fr2 = Im(:,:,1,fr+1);
+    Fr2 = Im(:,:,1,fr+1);
     
     %Empty matrices from the previous frame iteration
     ov = zeros(blockCount,2);
     mv = zeros(blockCount,2);
-
+    
     %Reset the displacement value stored from the previous frame iteration
-    totalDisplacement = 0;
+    pxDistance = 0;
     blockNo = 1;
-
     %Three-step search procedure(TSS)
     %Iterate through all of the block of pixels in the image
-    parfor y1=110:sizeY
-       for x1=110:sizeX
+    for y1=110:P:totalRows-20
+        for x1=110:P:totalColumns-20      
             
-            kOrg = Fr1(y1:y1+S,x1:x1+S);
-
             %Reset variables from the previous iteration
             y2 = y1;
             x2 = x1;
@@ -103,174 +98,186 @@ for fr=1:size(Im(:,:,:,end-2))
 
             %While the step size is not 1, continue searching for the best
             %block in frame n + 1.
-
+            
             while(S > 1)
+                kOrg = Fr1(y1:y1+S,x1:x1+S);
                 
                 %Obtain the next 9 blocks from Frame n + 1
                 %Centre block does not need to be checked, as it should
                 %already be within the index range of the reference image
                 k0 = Fr2(y2:y2+S,x2:x2+S);
+                                
+                %Create a flag variable for checking the validity of a
+                %block i.e. if a block is within the bounds of the image
+                k1_valid = 1;
+                k2_valid = 1;
+                k3_valid = 1;
+                k4_valid = 1;
+                k5_valid = 1;
+                k6_valid = 1;
+                k7_valid = 1;
+                k8_valid = 1;
                 
-                
+               
                 %If a block exceeds the image size, initialise it as an
                 %empty block
                 if(y2 - S > 0 && x2 - S > 0)
                     k1 = Fr2(y2-S:y2,x2-S:x2);
                 else
-                    k1 = zeros(size(k0),'uint8');
+                    k1_valid = 0;
                 end
+                
                 if (y2 + S < size(Fr2,1) && x2 - S > 0)
                     k2 = Fr2(y2:y2+S,x2-S:x2);
                 else
-                    k2 = zeros(size(k0),'uint8');
+                    k2_valid = 0;
                 end
+                
                 if (y2 + S + S < size(Fr2,1) && x2 - S > 0)
                     k3 = Fr2(y2+S:y2+S+S,x2-S:x2);
                 else
-                    k3 = zeros(size(k0),'uint8');
+                    k3_valid = 0;
                 end
+                
                 if (y2 - S > 0 && x2 + S < size(Fr2,2))
                     k4 = Fr2(y2-S:y2,x2:x2+S);
                 else
-                    k4 = zeros(size(k0),'uint8');
+                    k4_valid = 0;
                 end
+                
                 if (y2 + S + S < size(Fr2,1) && x2 + S < size(Fr2,2))
                     k5 = Fr2(y2+S:y2+S+S,x2:x2+S);
                 else
-                    k5 = zeros(size(k0),'uint8');
+                    k5_valid = 0;
                 end
+                
                 if (y2 - S > 0 && x2 + S + S < size(Fr2,2))
                     k6 = Fr2(y2-S:y2,x2+S:x2+S+S);
                 else
-                    k6 = zeros(size(k0),'uint8');
+                    k6_valid = 0;
                 end
+                
                 if (y2 + S < size(Fr2,1) && x2 + S + S < size(Fr2,2))
                     k7 = Fr2(y2:y2+S,x2+S:x2+S+S);
                 else
-                    k7 = zeros(size(k0),'uint8');
+                    k7_valid = 0;
                 end
+                
                 if (y2 + S + S < size(Fr2,1) && x2 + S + S < size(Fr2,2))
                     k8 = Fr2(y2+S:y2+S+S,x2+S:x2+S+S);
                 else
-                    k8 = zeros(size(k0),'uint8');
+                    k8_valid = 0;
                 end
-       
+                
+
                 %DEFAULT: Start with the origin being in the centre
                 best_SAD = sum(sum(abs(k0-kOrg)));
                 ytemp = y2;
                 xtemp = x2;
-                centreKernel = true;
+                centreKernel = 1;
                 
                 %K1 Check
                 SAD=sum(sum(abs(k1-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k1_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2 - S;
                     xtemp = x2 - S;    
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 %K2 Check
                 SAD=sum(sum(abs(k2-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k2_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2;
                     xtemp = x2 - S;
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 %K3 Check
                 SAD=sum(sum(abs(k3-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k3_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2 + S;
                     xtemp = x2 - S;
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 %K4 Check
                 SAD=sum(sum(abs(k4-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k4_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2 - S;
                     xtemp = x2;
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 %K5 Check
                 SAD=sum(sum(abs(k5-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k5_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2 + S;
                     xtemp = x2;
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 %K6 Check
                 SAD=sum(sum(abs(k6-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k6_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2 - S;
                     xtemp = x2 + S;
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 %K7 Check
                 SAD=sum(sum(abs(k7-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k7_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2;
                     xtemp = x2 + S;
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 %K8 Check
                 SAD=sum(sum(abs(k8-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && k8_valid ~= 0)
                     best_SAD = SAD;
                     ytemp = y2 + S;
                     xtemp = x2 + S;
-                    centreKernel = false;
+                    centreKernel = 0;
                 end
                 y2 = ytemp;
                 x2 = xtemp;
                 
                 S = S / 2;
-            end %while terminated here
-                % BLOCK LOCATED: STEP 4
+            end %while loop terminated here
+            % BLOCK LOCATED: STEP 4
+            ov(blockNo,1) = y1;
+            ov(blockNo,2) = x1;
             
+            mv(blockNo,1) = y2 - y1;
+            mv(blockNo,2) = x2 - x1;
             
-            %ov_x(x1+midpoint,y1+midpoint) = x1;
-            %ov_y(x1+midpoint,y1+midpoint) = y1;
-            
-            %mv_x(x1+midpoint,y1+midpoint) = x2;
-            %mv_y(x1+midpoint,y1+midpoint) = y2;
-
             blockNo = blockNo + 1;
-
-            totalDisplacement = totalDisplacement + ((y2 - y1).^2 + (x2 - x1).^2);
-            %progress = blockNo / 3129 * 100;
             
-            %Output progress to command window (Debug purposes, remove in
-            %final version)
-            %clc;
-            %disp('------------------------');
-            %str = sprintf('FRAME = %d', fr);
-            %disp(str);
-            %disp('------------------------');
-            %str = sprintf('Progress = %.1f%%',progress);
-            %disp(str);
+            pxDistance = pxDistance + ((y2 - y1).^2 + (x2 - x1).^2);
         end
-    end
-    
-    pov = gather(ov);
-    pmv = gather(mv);
-    
-    
-    totalDisplacement = sqrt(totalDisplacement);
-    velocity = totalDisplacement / Frame_Rate;
-    
-    imshow(Im(:,:,:,fr));
-    title(num2str(fr));
-    hold on;
-    q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
-    %q.Color = 'r';
-    hold off;
-    pause(0.01);
-end
+    end %nested for loop terminated here
+    elapsedTime = toc;
+    pxDistance = sqrt(pxDistance);
+    cmDistance = pxDistance / 30;
+    velocity = cmDistance / elapsedTime;
+    velocityArr(fr) = velocity;
+%     
 
+    %average velocity vector
+    avgMV_X = sum(mv(:,1)) / sum(size(mv(:,1)));
+    avgMV_Y = sum(mv(:,2)) / sum(size(mv(:,1)));
+    
+%     subplot(1,2,1);
+%         imshow(Im(:,:,:,fr));
+%         hold on;
+%         q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
+%         hold off;
+%     subplot(1,2,2);
+    scatter(fr,velocity);
+    hold on;
+    line(fr,velocity);
+    pause(0.0001);
+end
 
 disp('end of script');
