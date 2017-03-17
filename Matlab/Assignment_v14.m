@@ -22,8 +22,8 @@ Fr2 = Im(:,:,1,3);
 centreKernel = 0; %Flag for verifying if optimal estimate has been found
 pxDistance = 0; %distanceTravelled = sqrt(x1 - x2).^2 + (y1 - y2).^2 + ...)
 velocity = 0; %Velocity value for estimating the muscle movement per frame
-Frame_Rate = 50; %Extracted from the DICOM file info
-Im_struct = size(Im(:,:,:,:));
+
+Im_struct = size(Im(:,:,:,:)); %Store structural information about the DICOM image for reference later on
 totalRows = (Im_struct(1));
 totalColumns = (Im_struct(2));
 totalChannels = (Im_struct(3));
@@ -32,14 +32,8 @@ totalFrames = (Im_struct(4));
 P = 4;
 
 blockSize = P;
-blockCount = 4000;
-midpoint = blockSize/2;
-
-
-y1 = 1;
-x1 = 1;
-y2 = 1;
-x2 = 1;
+blockCount = 1; %initial value for total blocks in each frame
+midpoint = blockSize/2; %mid point of each block
 
 disp('Variables Initialised!');
 disp('------------------------');
@@ -82,8 +76,11 @@ for fr=1:totalFrames-1
     mv = zeros(blockCount,2);
     
     %Reset the displacement value stored from the previous frame iteration
-    pxDistance = 0;
+    totalDistanceCm = 0;
+    
+    %Reset the block count from the previous frame iteration
     blockNo = 1;
+    
     %Three-step search procedure(TSS)
     %Iterate through all of the block of pixels in the image
     for y1=110:P:totalRows-20
@@ -178,7 +175,7 @@ for fr=1:totalFrames-1
                 
                 %K1 Check
                 SAD=sum(sum(abs(k1-kOrg)));
-                if (SAD < best_SAD && k1_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2 - S;
                     xtemp = x2 - S;    
@@ -186,7 +183,7 @@ for fr=1:totalFrames-1
                 end
                 %K2 Check
                 SAD=sum(sum(abs(k2-kOrg)));
-                if (SAD < best_SAD && k2_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2;
                     xtemp = x2 - S;
@@ -194,7 +191,7 @@ for fr=1:totalFrames-1
                 end
                 %K3 Check
                 SAD=sum(sum(abs(k3-kOrg)));
-                if (SAD < best_SAD && k3_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2 + S;
                     xtemp = x2 - S;
@@ -202,7 +199,7 @@ for fr=1:totalFrames-1
                 end
                 %K4 Check
                 SAD=sum(sum(abs(k4-kOrg)));
-                if (SAD < best_SAD && k4_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2 - S;
                     xtemp = x2;
@@ -210,7 +207,7 @@ for fr=1:totalFrames-1
                 end
                 %K5 Check
                 SAD=sum(sum(abs(k5-kOrg)));
-                if (SAD < best_SAD && k5_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2 + S;
                     xtemp = x2;
@@ -218,7 +215,7 @@ for fr=1:totalFrames-1
                 end
                 %K6 Check
                 SAD=sum(sum(abs(k6-kOrg)));
-                if (SAD < best_SAD && k6_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2 - S;
                     xtemp = x2 + S;
@@ -226,7 +223,7 @@ for fr=1:totalFrames-1
                 end
                 %K7 Check
                 SAD=sum(sum(abs(k7-kOrg)));
-                if (SAD < best_SAD && k7_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2;
                     xtemp = x2 + S;
@@ -234,7 +231,7 @@ for fr=1:totalFrames-1
                 end
                 %K8 Check
                 SAD=sum(sum(abs(k8-kOrg)));
-                if (SAD < best_SAD && k8_valid ~= 0)
+                if (SAD < best_SAD)
                     best_SAD = SAD;
                     ytemp = y2 + S;
                     xtemp = x2 + S;
@@ -252,28 +249,36 @@ for fr=1:totalFrames-1
             mv(blockNo,1) = y2 - y1;
             mv(blockNo,2) = x2 - x1;
             
-            blockNo = blockNo + 1;
+            %pxDistance = pxDistance + ((y2 - y1).^2 + (x2 - x1).^2);
             
-            pxDistance = pxDistance + ((y2 - y1).^2 + (x2 - x1).^2);
+            %Calibration factor = known distance in cm / known distance in
+            %pixels
+            calibrationFactor = 10/30;
+            
+            %Re-gather the distance of the motion vector
+            distanceInPixelsY = mv(blockNo,1);
+            distanceInPixelsX = mv(blockNo,2);
+            
+            %Convert the from a pixel unit of distance to centimetres
+            distanceInCmY = distanceInPixelsY * calibrationFactor;
+            distanceInCmX = distanceInPixelsX * calibrationFactor;
+            
+            totalDistanceCm = totalDistanceCm + (distanceInCmY).^2 + (distanceInCmX).^2;            
+            
+            blockNo = blockNo + 1;
+
         end
     end %nested for loop terminated here
-    elapsedTime = toc;
-    pxDistance = sqrt(pxDistance);
-    cmDistance = pxDistance / 30;
-    velocity = cmDistance / elapsedTime;
-    velocityArr(fr) = velocity;
-%     
+    searchTime = toc;
+    %pxDistance = sqrt(pxDistance);
+    %cmDistance = pxDistance / 30;
+    velocity = sqrt(totalDistanceCm) / 50;
+    %velocityArr(fr) = velocity;
 
     %average velocity vector
     avgMV_X = sum(mv(:,1)) / sum(size(mv(:,1)));
     avgMV_Y = sum(mv(:,2)) / sum(size(mv(:,1)));
     
-%     subplot(1,2,1);
-%         imshow(Im(:,:,:,fr));
-%         hold on;
-%         q = quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
-%         hold off;
-%     subplot(1,2,2);
     scatter(fr,velocity);
     hold on;
     line(fr,velocity);
