@@ -248,7 +248,7 @@ for fr=1:totalFrames-1
             
             mv(blockNo,1) = y2 - y1;
             mv(blockNo,2) = x2 - x1;
-            
+                        
             %pxDistance = pxDistance + ((y2 - y1).^2 + (x2 - x1).^2);
             
             %Calibration factor = known distance in cm / known distance in
@@ -284,5 +284,4 @@ for fr=1:totalFrames-1
     line(fr,velocity);
     pause(0.0001);
 end
-
 disp('end of script');
