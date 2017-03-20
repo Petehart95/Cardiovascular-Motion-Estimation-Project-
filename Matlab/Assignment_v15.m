@@ -14,51 +14,34 @@ disp('Loading the DICOM Image...');
 Im = dicomread('E:\Year 3\Project\patient_data\IM_0025-Bmode');
 disp('DICOM Image Loaded!');
 disp('------------------------');
-disp('Initialising Variables...');
-%Obtain base frame and future frame for comparison
-Fr1 = Im(:,:,1,2);
-Fr2 = Im(:,:,1,3);
 
 centreKernel = 0; %Flag for verifying if optimal estimate has been found
 pxDistance = 0; %distanceTravelled = sqrt(x1 - x2).^2 + (y1 - y2).^2 + ...)
 velocity = 0; %Velocity value for estimating the muscle movement per frame
-
+T = 0.5;
 Im_struct = size(Im(:,:,:,:)); %Store structural information about the DICOM image for reference later on
 totalRows = (Im_struct(1));
 totalColumns = (Im_struct(2));
 totalChannels = (Im_struct(3));
-totalFrames = (Im_struct(4));
-
+totalFrames = (Im_struct(4));    
+f1 = figure;
+f2 = figure;
 P = 8;
 
 blockSize = P;
 blockCount = 1; %initial value for total blocks in each frame
 midpoint = blockSize/2; %mid point of each block
 
-disp('Variables Initialised!');
-disp('------------------------');
-
-
 %Clear command line, inform the user that the image is ready to be analysed
 %so they are aware of what stage the algorithm is at
-clc;
-disp('------------------------');
-disp('Executing the Algorithms');
-disp('------------------------');
 
+clc;
 disp('Beginning DICOM Image Analysis.');
 pause(1);
 clc;
-disp('------------------------');
-disp('Executing the Algorithms');
-disp('------------------------');
-
 disp('Beginning DICOM Image Analysis..');
 pause(1);
 clc;
-disp('------------------------');
-disp('Executing the Algorithms');
-disp('------------------------');
 disp('Beginning DICOM Image Analysis...');
 pause(1);
 
@@ -67,9 +50,12 @@ pause(1);
 for fr=1:totalFrames-1
     tic
     %Get the first frame as a reference point
-    Fr1 = Im(:,:,1,fr);
+    Fr1 = Im(:,:,:,fr);
     %Get the subsequent frame for motion estimation
-    Fr2 = Im(:,:,1,fr+1);
+    Fr2 = Im(:,:,:,fr+1);
+    
+    Fr1 = rgb2gray(Fr1);
+    Fr2 = rgb2gray(Fr2);
     
     %Empty matrices from the previous frame iteration
     ov = zeros(blockCount,2);
@@ -81,18 +67,22 @@ for fr=1:totalFrames-1
     %Reset the block count from the previous frame iteration
     blockNo = 1;
     
+    pxDistance = 0;
+
     %Three-step search procedure(TSS)
     %Iterate through all of the block of pixels in the image
-    for x1=110:P:totalRows-20
-        for y1=110:P:totalColumns-20      
-            
+    for i=110:P:totalRows-20
+        for j=110:P:totalColumns-20      
             %Reset variables from the previous iteration
+            x1 = i;
+            y1 = j;
+            
             x2 = x1;
             y2 = y1;
             
             %Reset the step size value
-            S = 4;
-
+            S = P;
+            
             %While the step size is not 1, continue searching for the best
             %block in frame n + 1.
             while(S > 1)
@@ -122,7 +112,7 @@ for fr=1:totalFrames-1
                 
                 %K1 Check
                 SAD=sum(sum(abs(k1-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2 - S;
                     ytemp = y2 - S;    
@@ -130,7 +120,7 @@ for fr=1:totalFrames-1
                 end
                 %K2 Check
                 SAD=sum(sum(abs(k2-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2;
                     ytemp = y2 - S;
@@ -138,7 +128,7 @@ for fr=1:totalFrames-1
                 end
                 %K3 Check
                 SAD=sum(sum(abs(k3-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2 + S;
                     ytemp = y2 - S;
@@ -146,7 +136,7 @@ for fr=1:totalFrames-1
                 end
                 %K4 Check
                 SAD=sum(sum(abs(k4-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2 - S;
                     ytemp = y2;
@@ -154,7 +144,7 @@ for fr=1:totalFrames-1
                 end
                 %K5 Check
                 SAD=sum(sum(abs(k5-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2 + S;
                     ytemp = y2;
@@ -162,7 +152,7 @@ for fr=1:totalFrames-1
                 end
                 %K6 Check
                 SAD=sum(sum(abs(k6-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2 - S;
                     ytemp = y2 + S;
@@ -170,7 +160,7 @@ for fr=1:totalFrames-1
                 end
                 %K7 Check
                 SAD=sum(sum(abs(k7-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2;
                     ytemp = y2 + S;
@@ -178,7 +168,7 @@ for fr=1:totalFrames-1
                 end
                 %K8 Check
                 SAD=sum(sum(abs(k8-kOrg)));
-                if (SAD < best_SAD)
+                if (SAD < best_SAD && SAD >= T)
                     best_SAD = SAD;
                     xtemp = x2 + S;
                     ytemp = y2 + S;
@@ -189,9 +179,10 @@ for fr=1:totalFrames-1
                 
                 S = S / 2;
             end %while loop terminated here
+
             % BLOCK LOCATED: STEP 4
-            ov(blockNo,1) = x1;
-            ov(blockNo,2) = y1;
+            ov(blockNo,1) = x1 + midpoint;
+            ov(blockNo,2) = y1 + midpoint;
             
             mv(blockNo,1) = x2 - x1;
             mv(blockNo,2) = y2 - y1;
@@ -232,28 +223,30 @@ for fr=1:totalFrames-1
     
     %For all of the motion vectors perceived, calculate the tangent to find
     %the angle of the motion vector
-    for i=1:size(mv,1)
-        mv_x = mv(i,1);
-        mv_y = mv(i,2);
-        mv_TAN = atan(mv_y/mv_x);
-        %If this motion vector has an angle difference greater than 180
-        %degrees, flag it and ignore it.  Reset the motion vector value to
-        %default.
-        if mv_TAN > 180
-            mv(i,1) = ov(i,1);
-            mv(i,2) = ov(i,2);
-        end
-    end
-    
-    subplot(1,2,1);
+
+    figure(f1);
     hold on;
     scatter(fr,velocity);
     hold off;
-    subplot(1,2,2);
+    
+    figure(f2);
     imshow(Im(:,:,:,fr));
+    %Draw a grid visualising the block distribution
+%     Im(110:P:end-40,:,:) = 255;  
+%     Im(:,110:P:end-40,:) = 255;  
     hold on;
     quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
     hold off;
+    
+%     subplot(2,1,1);
+%     hold on;
+%     scatter(fr,velocity);
+%     hold off;
+%     subplot(2,1,2);
+%     imshow(Im(:,:,:,fr));
+%     hold on;
+%     quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
+%     hold off;
     pause(0.0001);
 end
 disp('end of script');
