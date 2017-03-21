@@ -11,7 +11,7 @@ disp('------------------------');
 %Receive a DICOM image as input, store it in a 4D matrix.
 %Im(Col,Row,R/G/B,Frame)
 disp('Loading the DICOM Image...');
-Im = dicomread('E:\Year 3\Project\patient_data\IM_0025-Bmode');
+Im = dicomread('E:\Year 3\Project\patient_data\IM_0001-Bmode');
 disp('DICOM Image Loaded!');
 disp('------------------------');
 
@@ -26,8 +26,8 @@ totalChannels = (Im_struct(3));
 totalFrames = (Im_struct(4));    
 f1 = figure;
 f2 = figure;
-P = 8;
-
+f3 = figure;
+P = 15;
 blockSize = P;
 blockCount = 1; %initial value for total blocks in each frame
 midpoint = blockSize/2; %mid point of each block
@@ -44,11 +44,14 @@ pause(1);
 clc;
 disp('Beginning DICOM Image Analysis...');
 pause(1);
+    fr_plt1 = 0;
+    vel_plt1 = 0;
 
 
 %Iterate through all frames of the DICOM image
 for fr=1:totalFrames-1
     tic
+    
     %Get the first frame as a reference point
     Fr1 = Im(:,:,:,fr);
     %Get the subsequent frame for motion estimation
@@ -81,7 +84,7 @@ for fr=1:totalFrames-1
             y2 = y1;
             
             %Reset the step size value
-            S = P;
+            S = 8;
             
             %While the step size is not 1, continue searching for the best
             %block in frame n + 1.
@@ -208,9 +211,9 @@ for fr=1:totalFrames-1
     end %nested for loop terminated here
     searchTime = toc;
     pxDistance = sqrt(pxDistance);
-    velocity = pxDistance / searchTime;
-    %cmDistance = pxDistance / 30;
-    %velocity = sqrt(totalDistanceCm) / 50;
+    %velocity = pxDistance / searchTime;
+    cmDistance = pxDistance / 44;
+    velocity = cmDistance / searchTime;
     %velocityArr(fr) = velocity;
 
     %average velocity vector
@@ -219,34 +222,36 @@ for fr=1:totalFrames-1
     
     %Calculate the inverse tangent from the motion vector to find
     %the angle
-    avgMV_TAN = atan(avgMV_Y/avgMV_X);
+    avgMV_TANi = atan(avgMV_Y/avgMV_X);
     
     %For all of the motion vectors perceived, calculate the tangent to find
     %the angle of the motion vector
+    for n=1:size(mv)
+        mvX = mv(n,1);
+        mvY = mv(n,2);
+        
+        mvTANi = atan(mvY/mvX);
+    end
+
+    disp(velocity)
 
     figure(f1);
     hold on;
-    scatter(fr,velocity);
+    plot([fr_plt1,fr],[vel_plt1,velocity],'red');
     hold off;
     
+    %Store these values for subsequent plot
+    fr_plt1 = fr;
+    vel_plt1 = velocity;
     figure(f2);
     imshow(Im(:,:,:,fr));
-    %Draw a grid visualising the block distribution
+%     Draw a grid visualising the block distribution
 %     Im(110:P:end-40,:,:) = 255;  
 %     Im(:,110:P:end-40,:) = 255;  
     hold on;
     quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
     hold off;
     
-%     subplot(2,1,1);
-%     hold on;
-%     scatter(fr,velocity);
-%     hold off;
-%     subplot(2,1,2);
-%     imshow(Im(:,:,:,fr));
-%     hold on;
-%     quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
-%     hold off;
     pause(0.0001);
 end
 disp('end of script');
