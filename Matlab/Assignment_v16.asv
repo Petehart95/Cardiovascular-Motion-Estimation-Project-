@@ -1,0 +1,123 @@
+%Third Year Project | Artefact 
+%Ultrasound Image Analysis with a Parallel Implementation
+
+%Reset script: close all windows, data in the command window and clear the
+%workspace to make room for new data
+close all; clc; clear;
+disp('------------------------');
+disp('Script Start');
+disp('------------------------');
+
+%Receive a DICOM image as input, store it in a 4D matrix.
+%Im(Col,Row,R/G/B,Frame)
+disp('Loading the DICOM Image...');
+Im = dicomread('E:\Year 3\Project\patient_data\IM_0001-Bmode');
+disp('DICOM Image Loaded!');
+disp('------------------------');
+
+Im_struct = size(Im(:,:,:,:)); %Store structural information about the DICOM image for reference later on
+totalRows = (Im_struct(1));
+totalColumns = (Im_struct(2));
+totalChannels = (Im_struct(3));
+totalFrames = (Im_struct(4));    
+
+kernelSize = 20;
+kernelCount = 0;
+stepSize = (kernelSize / 2);
+searchWindowSize = (kernelSize*3)/2;
+threshold = 0.5;
+
+searchStart = 110;
+searchEnd = 110;
+
+
+totalKernel = 
+f1 = figure;
+f2 = figure;
+
+%Clear command line, inform the user that the image is ready to be analysed
+%so they are aware of what stage the algorithm is at
+
+clc;
+disp('Beginning DICOM Image Analysis.');
+pause(1);
+clc;
+disp('Beginning DICOM Image Analysis..');
+pause(1);
+clc;
+disp('Beginning DICOM Image Analysis...');
+pause(1);
+fr_plt1 = 0;
+vel_plt1 = 0;
+xtemp = 0;
+ytemp = 0;
+
+%Iterate through all frames of the DICOM image
+for fr=1:totalFrames-1
+    
+    %Get the first frame as a reference point
+    Fr1 = Im(:,:,:,fr);
+    %Get the subsequent frame for motion estimation
+    Fr2 = Im(:,:,:,fr+1);
+    
+    Fr1 = rgb2gray(Fr1);
+    Fr2 = rgb2gray(Fr2);
+    
+    %Empty matrices from the previous frame iteration
+    ov = zeros(blockCount,2);
+    
+    
+    mv = zeros(blockCount,2);
+    
+    %For each pixel within the frame
+    for x1 = searchStart:totalRows-searchEnd
+        for y1 = searchStart:totalColumns-searchEnd
+            %Get a kernel from Frame 1, which is the kernel that will be
+            %searched for in Frame 2
+            kernelRef = Fr1(x1-stepSize:x1+stepSize,y1-stepSize:y1+stepSize);
+            best_SAD = 999999999;
+            
+            %Search for the pixel within this search window of Frame (n + 1)
+            for x2 = x1-searchWindowSize:x1+searchWindowSize
+                for y2 = y1-searchWindowSize:y1+searchWindowSize
+                    currentKernel = Fr2(x2-stepSize:x2+stepSize,y2-stepSize:y2+stepSize);
+
+                    SAD = sum(sum(abs(currentKernel-kernelRef)));
+                    if SAD < best_SAD
+                        best_SAD = SAD;
+                        xtemp = x2;
+                        ytemp = y2;
+                    end
+                end
+            end
+            
+            %Store motion vectors in 
+            ov(blockNo,1) = x1 + midpoint;
+            ov(blockNo,2) = y1 + midpoint;
+            
+            mv(blockNo,1) = x2 - x1;
+            mv(blockNo,2) = y2 - y1;
+            
+        end
+    end
+
+    figure(f1);
+    hold on;
+    plot([fr_plt1,fr],[vel_plt1,velocity],'red');
+    hold off;
+    
+    %Store these values for subsequent plot
+    fr_plt1 = fr;
+    vel_plt1 = velocity;
+    figure(f2);
+    imshow(Im(:,:,:,fr));
+%     Draw a grid visualising the block distribution
+%     Im(110:P:end-40,:,:) = 255;  
+%     Im(:,110:P:end-40,:) = 255;  
+    hold on;
+    quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
+    hold off;
+    
+    pause(0.0001);
+end
+disp('end of script');

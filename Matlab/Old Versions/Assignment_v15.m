@@ -74,8 +74,8 @@ for fr=1:totalFrames-1
 
     %Three-step search procedure(TSS)
     %Iterate through all of the block of pixels in the image
-    for i=110:P:totalRows-20
-        for j=110:P:totalColumns-20      
+    for i=110:totalRows-20
+        for j=110:totalColumns-20      
             %Reset variables from the previous iteration
             x1 = i;
             y1 = j;
