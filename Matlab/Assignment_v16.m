@@ -24,16 +24,16 @@ totalFrames = (Im_struct(4));
 kernelSize = 20;
 kernelCount = 1;
 stepSize = (kernelSize / 2);
-searchWindowSize = (kernelSize*3)/2;
+searchWindowSize = (kernelSize*6)/2;
 threshold = 0.5;
 
 searchStart = 110;
-searchEnd = 110;
+searchEnd = 80;
 
-%lockCount = (((size(Fr1,1)-40) - 110)/20 * (size(Fr1,2) - 20) - 110)/20;
-%totalKernels = 
+totalKernels = (totalRows - (searchStart + searchEnd) / kernelSize) + (totalColumns - (searchStart + searchEnd) / kernelSize);
+
 f1 = figure;
-f2 = figure;
+%f2 = figure;
 
 %Clear command line, inform the user that the image is ready to be analysed
 %so they are aware of what stage the algorithm is at
@@ -64,10 +64,8 @@ for fr=1:totalFrames-1
     Fr2 = rgb2gray(Fr2);
     
     %Empty matrices from the previous frame iteration
-    plt_x1 = zeros(800);
-    plt_y1 = zeros(800);
-    plt_x2 = zeros(800);
-    plt_y2 = zeros(800);
+    plt_xy = zeros(totalKernels,2);
+    plt_uv = zeros(totalKernels,2);
     
     kernelCount = 1;
     %For each pixel within the frame
@@ -76,7 +74,7 @@ for fr=1:totalFrames-1
             %Get a kernel from Frame 1, which is the kernel that will be
             %searched for in Frame 2
             kernelRef = Fr1(x1-stepSize:x1+stepSize,y1-stepSize:y1+stepSize);
-            best_SAD = 999999999;
+            best_SAD = 9999999;
             
             %Search for the pixel within this search window of Frame (n + 1)
             for x2 = x1-searchWindowSize:x1+searchWindowSize
@@ -85,7 +83,7 @@ for fr=1:totalFrames-1
                     currentKernel = Fr2(x2-stepSize:x2+stepSize,y2-stepSize:y2+stepSize);
                     SAD = sum(sum(abs(currentKernel-kernelRef)));
                     
-                    if SAD < best_SAD
+                    if SAD < best_SAD 
                         best_SAD = SAD;
                         xtemp = x2;
                         ytemp = y2;
@@ -95,18 +93,18 @@ for fr=1:totalFrames-1
             x2 = xtemp;
             y2 = ytemp;
             
-            plt_x1(kernelCount) = x1;
-            plt_y1(kernelCount) = y1;
+            plt_xy(kernelCount,1) = x1;
+            plt_xy(kernelCount,2) = y1;
             
-            plt_x2(kernelCount) = x2 - x1;
-            plt_y2(kernelCount) = y2 - y1;            
+            plt_uv(kernelCount,1) = x2 - x1;
+            plt_uv(kernelCount,2) = y2 - y1;            
             
             kernelCount = kernelCount + 1;
         end
     end
     imshow(Im(:,:,:,fr));
     hold on;
-    quiver(plt_y1,plt_x1,plt_y2,plt_x2,'color',[1,0,0]);
+    quiver(plt_xy(:,2),plt_xy(:,1),plt_uv(:,2),plt_uv(:,1),'color',[1,0,0]);
     hold off;
     
     pause(0.0001);
