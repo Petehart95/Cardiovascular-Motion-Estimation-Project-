@@ -32,8 +32,9 @@ searchEnd = 80;
 
 fr_plt1 = 0;
 vel_plt1 = 0;
-xtemp = 0;
+xtemp,y = 0;
 ytemp = 0;
+x,y = 0;
 
 totalKernels = (totalRows - (searchStart + searchEnd) / kernelSize) + (totalColumns - (searchStart + searchEnd) / kernelSize);
 
