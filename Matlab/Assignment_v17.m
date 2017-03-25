@@ -32,9 +32,8 @@ searchEnd = 80;
 
 fr_plt1 = 0;
 vel_plt1 = 0;
-xtemp,y = 0;
+xtemp = 0;
 ytemp = 0;
-x,y = 0;
 
 totalKernels = (totalRows - (searchStart + searchEnd) / kernelSize) + (totalColumns - (searchStart + searchEnd) / kernelSize);
 
@@ -80,8 +79,8 @@ for fr=1:totalFrames-1
     kernelCount = 1;
     
     %For each pixel within the frame
-    for x1 = searchStart:10:totalRows-searchEnd
-        for y1 = searchStart:10:totalColumns-searchEnd
+    for x1 = searchStart:20:totalRows-searchEnd
+        for y1 = searchStart:20:totalColumns-searchEnd
             %Get a kernel from Frame 1, which is the kernel that will be
             %searched for in Frame 2
             kernelRef = Fr1(x1-stepSize:x1+stepSize,y1-stepSize:y1+stepSize);
@@ -126,7 +125,7 @@ for fr=1:totalFrames-1
             
             % Calculate the total distance of displacement so a velocity
             % calculation can be calculated later
-            pxDistance = pxDistance + (x2.^2 - x1.^2) + (y2.^2 - y1.^2);
+            pxDistance = pxDistance + (x2 - x1).^2 + (y2 - y1).^2;
             
             % Keep track on the total amount of kernels for indexing
             kernelCount = kernelCount + 1;
@@ -152,6 +151,10 @@ for fr=1:totalFrames-1
     hold on;
     plot([fr_plt1,fr],[vel_plt1,velocity],'red');
     hold off;
+    
+    %Store these values for subsequent plot
+    fr_plt1 = fr;
+    vel_plt1 = velocity;
     
     % Plot the original ultrasound image with an overlay demonstrating
     % motion vector distribution
