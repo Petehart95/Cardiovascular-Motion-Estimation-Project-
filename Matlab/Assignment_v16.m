@@ -11,7 +11,7 @@ disp('------------------------');
 %Receive a DICOM image as input, store it in a 4D matrix.
 %Im(Col,Row,R/G/B,Frame)
 disp('Loading the DICOM Image...');
-Im = dicomread('E:\Year 3\Project\patient_data\IM_0001-Bmode');
+Im = dicomread('F:\Year 3\Project\patient_data\IM_0001-Bmode');
 disp('DICOM Image Loaded!');
 disp('------------------------');
 
@@ -54,7 +54,7 @@ ytemp = 0;
 
 %Iterate through all frames of the DICOM image
 for fr=1:totalFrames-1
-    
+    tic
     %Get the first frame as a reference point
     Fr1 = Im(:,:,:,fr);
     %Get the subsequent frame for motion estimation
@@ -102,6 +102,20 @@ for fr=1:totalFrames-1
             kernelCount = kernelCount + 1;
         end
     end
+    searchTime = toc;
+    pxDistance = sqrt(pxDistance);
+    cmDistance = pxDistance / 44;
+    velocity = cmDistance / searchTime;
+    
+    %velocity = pxDistance / searchTime;
+    %velocityArr(fr) = velocity;
+    
+    figure(f1);
+    hold on;
+    plot([fr_plt1,fr],[vel_plt1,velocity],'red');
+    hold off;
+    
+    figure(f2);
     imshow(Im(:,:,:,fr));
     hold on;
     quiver(plt_xy(:,2),plt_xy(:,1),plt_uv(:,2),plt_uv(:,1),'color',[1,0,0]);
