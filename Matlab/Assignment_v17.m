@@ -1,5 +1,5 @@
 %Third Year Project | Artefact 
-%Ultrasound Image Analysis with a Parallel Implementation
+%Cardiac Image Processing Project
 
 %Reset script: close all windows, data in the command window and clear the
 %workspace to make room for new data
@@ -23,11 +23,11 @@ totalFrames = (Im_struct(4));
 
 kernelSize = 20;
 kernelCount = 1;
-stepSize = (kernelSize / 2);
-searchWindowSize = (kernelSize*6)/2;
+stepSize = kernelSize/2;
+searchWindowSize = (20*6)/2;
 threshold = 0.5;
 
-searchStart = 110;
+searchStart = 80;
 searchEnd = 80;
 
 fr_plt1 = 0;
@@ -39,6 +39,7 @@ totalKernels = (totalRows - (searchStart + searchEnd) / kernelSize) + (totalColu
 
 f1 = figure;
 f2 = figure;
+f3 = figure;
 
 %Clear command line, inform the user that the image is ready to be analysed
 %so they are aware of what stage the algorithm is at
@@ -69,7 +70,18 @@ for fr=1:totalFrames-1
     
     Fr1 = rgb2gray(Fr1);
     Fr2 = rgb2gray(Fr2);
+    T = 140;
     
+    for i=1:size(Fr1,1)
+        for j=1:size(Fr1,2)
+            if Fr1(i,j) > T
+                I_bw(i,j) = 0;
+            else
+                I_bw(i,j) = 255;
+            end
+        end
+    end
+
     %Empty matrices from the previous frame iteration
     plt_xy = zeros(totalKernels,2);
     plt_uv = zeros(totalKernels,2);
@@ -79,13 +91,18 @@ for fr=1:totalFrames-1
     kernelCount = 1;
     
     %For each pixel within the frame
-    for x1 = searchStart:20:totalRows-searchEnd
+    for x1 = searchStart:10:totalRows-searchEnd
         for y1 = searchStart:20:totalColumns-searchEnd
             %Get a kernel from Frame 1, which is the kernel that will be
             %searched for in Frame 2
             kernelRef = Fr1(x1-stepSize:x1+stepSize,y1-stepSize:y1+stepSize);
-            best_SAD = 9999999;
             
+            %Get an initial kernel as a starting point (middle)
+            firstKernel = Fr2(x1-stepSize:x1+stepSize,y1-stepSize:y1+stepSize);
+            best_SAD = sum(sum(abs(firstKernel-kernelRef)));
+            xtemp = x1;
+            ytemp = y1;
+
             %Search for the pixel within this search window of Frame (n + 1)
             for x2 = x1-searchWindowSize:x1+searchWindowSize
                 for y2 = y1-searchWindowSize:y1+searchWindowSize
@@ -94,14 +111,17 @@ for fr=1:totalFrames-1
                     % search window
                     currentKernel = Fr2(x2-stepSize:x2+stepSize,y2-stepSize:y2+stepSize);
                     
+                    currentKernelMask1 = I_bw(x1,y1);
+                    currentKernelMask2 = I_bw(x2,y2);
+
                     %Calculate an SAD value to determine how similar this
                     %kernel is with the kernel being searched for
                     SAD = sum(sum(abs(currentKernel-kernelRef)));
-                    
+                                        
                     % If this kernel has a smaller difference with the
                     % reference kernel, replace the best kernel with this
                     % kernel
-                    if SAD < best_SAD 
+                    if SAD < best_SAD && currentKernelMask1 == 0
                         best_SAD = SAD;
                         xtemp = x2;
                         ytemp = y2;
@@ -140,8 +160,14 @@ for fr=1:totalFrames-1
     % Convert px/s to cm/s
     cmDistance = pxDistance / 44;
     
+    %average velocity vector
+    avgMV_X = sum(plt_uv(:,1)) / sum(size(plt_uv(:,1)));
+    avgMV_Y = sum(plt_uv(:,2)) / sum(size(plt_uv(:,2)));
+    
     % Estimate velocity of the muscle contraction
     velocity = cmDistance / searchTime;
+    
+
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PLOT RESULTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -159,6 +185,12 @@ for fr=1:totalFrames-1
     % Plot the original ultrasound image with an overlay demonstrating
     % motion vector distribution
     figure(f2);
+    imshow(I_bw);
+    hold on;
+    quiver(plt_xy(:,2),plt_xy(:,1),plt_uv(:,2),plt_uv(:,1),'color',[1,0,0]);
+    hold off;    
+    
+    figure(f3);
     imshow(Im(:,:,:,fr));
     hold on;
     quiver(plt_xy(:,2),plt_xy(:,1),plt_uv(:,2),plt_uv(:,1),'color',[1,0,0]);
