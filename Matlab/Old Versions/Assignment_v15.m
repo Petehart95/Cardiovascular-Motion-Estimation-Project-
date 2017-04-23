@@ -11,7 +11,12 @@ disp('------------------------');
 %Receive a DICOM image as input, store it in a 4D matrix.
 %Im(Col,Row,R/G/B,Frame)
 disp('Loading the DICOM Image...');
-Im = dicomread('E:\Year 3\Project\patient_data\IM_0001-Bmode');
+FilterSpec = '.dcm';
+[FileName,PathName,FilterIndex] = uigetfile(FilterSpec);
+selectedFile = strcat(PathName,FileName);
+
+% DICOM image selected, store in a matrix
+Im = dicomread(selectedFile);
 disp('DICOM Image Loaded!');
 disp('------------------------');
 
@@ -249,7 +254,8 @@ for fr=1:totalFrames-1
 %     Im(110:P:end-40,:,:) = 255;  
 %     Im(:,110:P:end-40,:) = 255;  
     hold on;
-    quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'color',[1,0,0]);
+    quiver(ov(:,2),ov(:,1),mv(:,2),mv(:,1),'AutoScale','off');
+
     hold off;
     
     pause(0.0001);
