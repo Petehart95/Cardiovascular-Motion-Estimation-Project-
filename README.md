@@ -1,15 +1,15 @@
-## An Investigation into the Prominence and Accuracy of Block-Matching Motion Estimation Algorithms within the Application of Medical Image Processing
+## Developing an Accurate Motion Estimation Algorithm within the Field of Cardiovascular Image Processing
 
-###Artefact - To Do:
-1. Amend average velocity vector calculation -done
-2. Remove noise in the DICOM image by comparing each velocity vector with the average velocity vector
-3. Improve three-step search algorithm -> allow loop to be broke if the best kernel is the centre kernel
-4. Use region detection to crop the LV and LVT within the image
-
-###Dissertation - To Do:
-1. [Introduction] Add more regarding the background of the project and how it can be argued to be academically justified. 
-2. [Introduction] Reword objective/aim descriptions as appropriate
-3. [Literature Review] Re-implement previously discussed literature from the project proposal
-4. [Literature Review] Try and find at least 10 more sources for the literature review
-5. [Acknowledgements] Quickly do this section
-6. [Cover Page] Edit cover page layout as appropriate, see more examples of past dissertations.
+The following project reviews the development of a motion estimation algorithm which could 
+be applied within the field of cardiovascular image processing, this is effectively accomplished 
+by utilising a speckle tracking technique in combination with a block matching motion 
+estimation algorithm. This algorithm was then applied a data collection comprising of different 
+examples of cardiovascular patient data, whereby the motion estimation algorithm’s capability 
+was established based on an average velocity plot which described the average velocity of the 
+motion that was detected between frames of the ultrasound image throughout the entire cardiac 
+cycle. It is hoped that this project will produce useful analytical data which can be used by 
+clinicians with the diagnosis and prognosis of patients with cardiovascular related concerns. 
+Overall, the outcome of this project concluded with the motion of the cardiomyocytes being 
+detected and tracked effectively, though it should be noted that the developed solution still 
+includes an amount of noisy motion vectors being unnecessarily tracked resulting in a slightly 
+more obscured outcome.
