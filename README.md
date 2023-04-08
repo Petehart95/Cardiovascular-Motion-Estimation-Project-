@@ -1,5 +1,6 @@
-## Developing an Accurate Motion Estimation Algorithm within the Field of Cardiovascular Image Processing
+# Developing an Accurate Motion Estimation Algorithm within the Field of Cardiovascular Image Processing
 [Third Year Project]
+
 The following project reviews the development of a motion estimation algorithm which could 
 be applied within the field of cardiovascular image processing, this is effectively accomplished 
 by utilising a speckle tracking technique in combination with a block matching motion 
